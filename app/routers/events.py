@@ -1,3 +1,4 @@
+
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -44,14 +45,14 @@ def create_event(
     response_model=list[EventSchema]
 )
 def list_events(
-    search: str | None = Query(default=None),
+    location: str | None = Query(default=None),
     db: Session = Depends(get_db)
 ):
     query = db.query(Event)
 
-    if search:
+    if location:
         query = query.filter(
-            Event.title.ilike(f"%{search}%")
+            Event.location.ilike(f"%{location}%")
         )
 
     return query.order_by(Event.date).all()
