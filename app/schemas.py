@@ -1,4 +1,4 @@
-from datetime import date
+import datetime
 from typing import Optional
 from pydantic import BaseModel, EmailStr, Field
 
@@ -11,7 +11,7 @@ class EventBase(BaseModel):
     location: str
     capacity: int = Field(..., ge=1, le=10000, description="Capacity must be between 1 and 10000 inclusive")
     description: Optional[str] = None
-    date: date = Field(default_factory=date.today)
+    date: datetime.date = Field(default_factory=datetime.date.today)
 
 
 class EventCreate(EventBase):
@@ -23,7 +23,7 @@ class EventUpdate(BaseModel):
     location: Optional[str] = None
     capacity: Optional[int] = Field(None, ge=1, le=10000)
     description: Optional[str] = None
-    date: Optional[date] = None
+    date: Optional[datetime.date] = None
 
 
 class Event(EventBase):
@@ -48,6 +48,25 @@ class ParticipantCreate(ParticipantBase):
 class Participant(ParticipantBase):
     id: int
     event_id: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+
+# ==========================================
+# Registration Schemas
+# ==========================================
+class RegistrationBase(BaseModel):
+    event_id: int
+    participant_id: int
+
+
+class RegistrationCreate(RegistrationBase):
+    pass
+
+
+class Registration(RegistrationBase):
+    id: int
 
     class Config:
         from_attributes = True

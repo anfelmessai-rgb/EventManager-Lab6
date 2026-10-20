@@ -1,11 +1,10 @@
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
 
 from ..database import get_db
 from ..models import Participant
 from ..schemas import Participant as ParticipantSchema, ParticipantCreate
-
 
 router = APIRouter(
     prefix="/participants",
@@ -13,23 +12,15 @@ router = APIRouter(
 )
 
 
-# =======================================================
-# Business Logic Helpers (Required for Lab 2)
-# =======================================================
 def has_available_capacity(current_count: int, max_capacity: int) -> bool:
-    """Returns True if current_count < max_capacity, else False."""
     return current_count < max_capacity
 
 
 def check_duplicate_registration(registered_ids: list, new_id: int):
-    """Raises ValueError if new_id already exists in registered_ids."""
     if new_id in registered_ids:
         raise ValueError(f"Participant with ID {new_id} is already registered.")
 
 
-# =======================================================
-# Endpoints
-# =======================================================
 @router.post("/", response_model=ParticipantSchema, status_code=status.HTTP_201_CREATED)
 def register_participant(participant: ParticipantCreate, db: Session = Depends(get_db)):
     db_participant = Participant(**participant.model_dump())
