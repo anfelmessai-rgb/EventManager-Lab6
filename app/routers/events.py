@@ -67,7 +67,7 @@ def list_events(
         )
 
     return query.order_by(Event.date).all()
-:
+
     query = db.query(Event)
 
     if search:
