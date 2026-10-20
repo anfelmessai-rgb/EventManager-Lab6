@@ -1,6 +1,4 @@
-
 from datetime import date
-
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
@@ -16,6 +14,28 @@ router = APIRouter(
 )
 
 
+# =======================================================
+# Pure Helper Functions (Required for Lab 2 Unit Tests)
+# =======================================================
+def filter_events_by_location(events: list, location: str) -> list:
+    """Pure search helper function: returns case-insensitive location matches."""
+    return [
+        e for e in events
+        if location.lower() in (e["location"] if isinstance(e, dict) else e.location).lower()
+    ]
+
+
+def filter_events_by_title(events: list, title: str) -> list:
+    """Pure search helper function: returns case-insensitive title matches."""
+    return [
+        e for e in events
+        if title.lower() in (e["title"] if isinstance(e, dict) else e.title).lower()
+    ]
+
+
+# =======================================================
+# Endpoints
+# =======================================================
 @router.post(
     "/",
     response_model=EventSchema,
@@ -44,36 +64,25 @@ def create_event(
     "/",
     response_model=list[EventSchema]
 )
-
-@router.get(
-    "/",
-    response_model=list[EventSchema]
-)
 def list_events(
+    title: str | None = Query(default=None),
     search: str | None = Query(default=None),
     location: str | None = Query(default=None),
     db: Session = Depends(get_db)
 ):
+    """
+    Lab 1 Challenge Solution:
+    Combines both location and title/search filters together in the SQL query.
+    """
     query = db.query(Event)
 
     if location:
-        query = query.filter(
-            Event.location.ilike(f"%{location}%")
-        )
+        query = query.filter(Event.location.ilike(f"%{location}%"))
 
-    if location:
-        query = query.filter(
-            Event.location.ilike(f"%{location}%")
-        )
-
-    return query.order_by(Event.date).all()
-
-    query = db.query(Event)
-
-    if search:
-        query = query.filter(
-            Event.title.ilike(f"%{search}%")
-        )
+    # Supports both ?title= and ?search=
+    keyword = title or search
+    if keyword:
+        query = query.filter(Event.title.ilike(f"%{keyword}%"))
 
     return query.order_by(Event.date).all()
 

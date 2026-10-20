@@ -1,32 +1,43 @@
 from datetime import date
+from typing import Optional
+from pydantic import BaseModel, EmailStr, Field
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-
+# ==========================================
+# Event Schemas
+# ==========================================
 class EventBase(BaseModel):
-    title: str = Field(min_length=3, max_length=100)
-    description: str | None = None
-    date: date
-    location: str = Field(min_length=2, max_length=100)
-    capacity: int = Field(gt=0, le=10000)
+    title: str = Field(..., min_length=3, description="Title must be >= 3 characters")
+    location: str
+    capacity: int = Field(..., ge=1, le=10000, description="Capacity must be between 1 and 10000 inclusive")
+    description: Optional[str] = None
+    date: date = Field(default_factory=date.today)
 
 
 class EventCreate(EventBase):
     pass
 
 
-class EventUpdate(EventBase):
-    pass
+class EventUpdate(BaseModel):
+    title: Optional[str] = Field(None, min_length=3)
+    location: Optional[str] = None
+    capacity: Optional[int] = Field(None, ge=1, le=10000)
+    description: Optional[str] = None
+    date: Optional[date] = None
 
 
 class Event(EventBase):
     id: int
 
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        from_attributes = True
 
 
+# ==========================================
+# Participant Schemas
+# ==========================================
 class ParticipantBase(BaseModel):
-    name: str = Field(min_length=2, max_length=100)
+    name: str = Field(..., min_length=2, description="Name must be >= 2 characters")
     email: EmailStr
 
 
@@ -36,13 +47,7 @@ class ParticipantCreate(ParticipantBase):
 
 class Participant(ParticipantBase):
     id: int
+    event_id: Optional[int] = None
 
-    model_config = ConfigDict(from_attributes=True)
-
-
-class Registration(BaseModel):
-    id: int
-    event_id: int
-    participant_id: int
-
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        from_attributes = True
